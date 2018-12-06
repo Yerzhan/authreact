@@ -3,6 +3,9 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const jwt = require('express-jwt');
+const jwksRsa = require('jwks-rsa');
+const keys = require('../../config/keys');
 
 const app = express();
 
@@ -14,6 +17,22 @@ app.use(cors());
 
 // log HTTP requests
 app.use(morgan('combined'));
+
+
+const checkJwt = jwt({
+  secret: jwksRsa.expressJwtSecret({
+    cache: true,
+    rateLimit: true,
+    jwksRequestsPerMinute: 5,
+    jwksUri: `https://${keys.auth0domain}/.well-known/jwks.json`
+  }),
+
+  // Validate the audience and the issuer.
+  audience: keys.auth0clientId,
+  issuer: `https://${keys.auth0domain}/`,
+  algorithms: ['RS256']
+});
+
 
 // retrieve all questions
 app.get('/', (req, res) => {
